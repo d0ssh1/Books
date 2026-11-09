@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Прочитано</title>
+<meta name="description" content="Мой дневник чтения: книги, оценки, цитаты и мысли.">
+<meta name="theme-color" content="#DEDAD0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23DEDAD0'/%3E%3Crect x='-6' y='32' width='76' height='14' fill='%23C8231E' transform='rotate(-8 32 39)'/%3E%3Ccircle cx='45' cy='21' r='13' fill='%231C1A18'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400;0,500;0,600;1,400&family=Oswald:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <div id="listView">
+    <header class="hero">
+      <div class="hero-title">
+        <span class="bar" aria-hidden="true"></span>
+        <span class="circle" aria-hidden="true"></span>
+        <h1 class="h1" aria-label="Прочитано"><span aria-hidden="true" id="h1chars">Прочитано</span></h1>
+        <p class="tag" id="tag"><span class="num" id="cNum">0</span> <span id="cWord">книг</span> за <span id="cYear"></span> год</p>
+      </div>
+      <div class="hero-side" id="heroSide">
+        <button type="button" class="btn btn-red" id="addBtn">Внести книгу</button>
+        <span class="saved" id="saved" role="status" aria-live="polite">Загружаю книги…</span>
+      </div>
+    </header>
+
+    <div class="controls">
+      <nav class="genres" id="genres" aria-label="Жанры"></nav>
+      <div class="row2">
+        <div class="sorts" id="sorts" role="group" aria-label="Порядок">
+          <span class="lbl">Порядок:</span>
+          <button type="button" class="sort" data-sort="date" aria-pressed="true">Дата<span class="dir" aria-hidden="true">↓</span></button>
+          <button type="button" class="sort" data-sort="rating" aria-pressed="false">Оценка<span class="dir" aria-hidden="true">↓</span></button>
+          <button type="button" class="sort" data-sort="author" aria-pressed="false">Автор<span class="dir" aria-hidden="true">↓</span></button>
+          <button type="button" class="sort" data-sort="title" aria-pressed="false">Название<span class="dir" aria-hidden="true">↓</span></button>
+          <button type="button" class="sort" data-sort="pages" aria-pressed="false">Объём<span class="dir" aria-hidden="true">↓</span></button>
+          <span class="sort-ind" id="sortInd" aria-hidden="true"></span>
+        </div>
+        <div class="search">
+          <label for="q">Поиск</label>
+          <input id="q" class="inp" type="search" placeholder="автор или название" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <ol class="list" id="list" aria-label="Книги"></ol>
+    <p class="loading-line" id="loadingLine">Загружаю книги…</p>
+    <div class="empty is-hidden" id="empty"></div>
+
+    <footer class="foot">
+      <div class="foot-row">
+        <button type="button" class="btn btn-ink" id="exportBtn" aria-expanded="false" aria-controls="exportX">Экспорт всех данных</button>
+        <button type="button" class="link" id="settingsBtn">Подключение к GitHub</button>
+      </div>
+      <div class="expand" id="exportX"><div>
+        <div class="export-opts">
+          <button type="button" class="btn btn-ghost btn-sm" data-export="json">JSON, полная копия</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-export="csv">Таблица для Excel</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-export="md">Текст с цитатами</button>
+          <p class="hint">JSON можно загрузить обратно в разделе «Подключение к GitHub». Таблица откроется в Excel и Google Таблицах, текст читается в любом редакторе.</p>
+        </div>
+      </div></div>
+    </footer>
+  </div>
+
+  <section id="book" hidden></section>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="pTitle" hidden></aside>
+<div class="wipe" id="wipe" hidden aria-hidden="true"><i class="k"></i><i class="r"></i></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="assets/lookup.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
