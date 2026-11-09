@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-09T05:34:21.449Z",
+  "updated": "2026-11-09T05:36:17.011Z",
   "books": [
     {
       "status": "read",
@@ -38,10 +38,17 @@
       "author": "Го Мён Хван",
       "year": 2025,
       "pages": 256,
-      "updatedAt": "2026-11-09T05:24:34.235Z",
+      "updatedAt": "2026-11-09T05:36:17.011Z",
       "id": "bmw8tgyezgql8",
       "createdAt": "2026-11-09T05:24:34.235Z",
-      "quotes": [],
+      "quotes": [
+        {
+          "id": "qmw8tw0ojzyiy",
+          "text": "Если вы не будете торопиться, то добьетесь успеха быстрее.",
+          "ref": "",
+          "comment": ""
+        }
+      ],
       "thoughts": []
     }
   ],
