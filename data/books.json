@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-09T06:03:30.798Z",
+  "updated": "2026-11-09T06:03:55.341Z",
   "books": [
     {
       "status": "read",
@@ -79,7 +79,7 @@
       "author": "Ли Бардуго",
       "year": 2015,
       "pages": 512,
-      "updatedAt": "2026-11-09T06:03:30.798Z",
+      "updatedAt": "2026-11-09T06:03:55.341Z",
       "id": "bmw8uv1biyhiq",
       "createdAt": "2026-11-09T06:03:30.798Z",
       "quotes": [],
