@@ -1,10 +1,12 @@
 {
   "version": 1,
-  "updated": "2026-11-09T05:32:20.188Z",
+  "updated": "2026-11-09T05:32:22.444Z",
   "books": [
     {
       "status": "read",
-      "genres": [],
+      "genres": [
+        "Классика"
+      ],
       "genresAuto": false,
       "rating": 10,
       "started": "",
@@ -15,7 +17,7 @@
       "author": "Джек Лондон",
       "year": 1998,
       "pages": 525,
-      "updatedAt": "2026-11-09T05:32:20.188Z",
+      "updatedAt": "2026-11-09T05:32:22.444Z",
       "id": "bmw8tfbbwrsn2",
       "createdAt": "2026-11-09T05:23:17.660Z",
       "quotes": [],
