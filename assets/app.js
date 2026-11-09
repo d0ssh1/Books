@@ -379,6 +379,14 @@
       '<div class="genres-row" id="gRow">' + genresHTML(b, false) + '</div>' +
       '<section class="review" id="review" aria-label="Отзыв">' + reviewHTML(b, false) + '</section>' +
       '<div class="cols">' +
+        '<section class="col-t" aria-labelledby="th"><h3 class="sec-h" id="th">Мысли <span class="n" id="tN">' + (b.thoughts || []).length + '</span></h3>' +
+          '<div class="thoughts" id="thoughts">' + thoughtsList(b) + '</div>' +
+          '<button type="button" class="btn btn-red" data-act="topen" id="tOpen">Записать мысль</button>' +
+          '<div class="expand" id="tX"><div><form class="nform" id="tForm" novalidate>' +
+            '<label for="tText">Мысль</label><textarea id="tText" class="inp" rows="3" placeholder="Что пришло в голову"></textarea>' +
+            '<span class="err is-hidden" id="tErr" style="color:#F3A19D">Впиши текст мысли</span>' +
+            '<div class="acts"><button type="submit" class="btn btn-red btn-sm">Сохранить мысль</button><button type="button" class="btn btn-ghost btn-sm" data-act="tclose">Отмена</button></div>' +
+          '</form></div></div></section>' +
         '<section class="col-q" aria-labelledby="qh"><h3 class="sec-h" id="qh">Цитаты <span class="n" id="qN">' + (b.quotes || []).length + '</span></h3>' +
           '<div class="quotes" id="quotes">' + quotesList(b) + '</div>' +
           '<button type="button" class="btn btn-red" data-act="qopen" id="qOpen">Добавить цитату</button>' +
@@ -388,14 +396,6 @@
             '<label for="qCmt">Мой комментарий</label><textarea id="qCmt" class="inp" rows="2" placeholder="Необязательно"></textarea>' +
             '<span class="err is-hidden" id="qErr">Впиши текст цитаты</span>' +
             '<div class="acts"><button type="submit" class="btn btn-red btn-sm">Сохранить цитату</button><button type="button" class="btn btn-ghost btn-sm" data-act="qclose">Отмена</button></div>' +
-          '</form></div></div></section>' +
-        '<section class="col-t" aria-labelledby="th"><h3 class="sec-h" id="th">Мысли <span class="n" id="tN">' + (b.thoughts || []).length + '</span></h3>' +
-          '<div class="thoughts" id="thoughts">' + thoughtsList(b) + '</div>' +
-          '<button type="button" class="btn btn-red" data-act="topen" id="tOpen">Записать мысль</button>' +
-          '<div class="expand" id="tX"><div><form class="nform" id="tForm" novalidate>' +
-            '<label for="tText">Мысль</label><textarea id="tText" class="inp" rows="3" placeholder="Что пришло в голову"></textarea>' +
-            '<span class="err is-hidden" id="tErr" style="color:#F3A19D">Впиши текст мысли</span>' +
-            '<div class="acts"><button type="submit" class="btn btn-red btn-sm">Сохранить мысль</button><button type="button" class="btn btn-ghost btn-sm" data-act="tclose">Отмена</button></div>' +
           '</form></div></div></section>' +
       '</div>';
 
