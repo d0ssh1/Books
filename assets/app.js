@@ -298,13 +298,69 @@
     return '<h3 class="sec-h">Отзыв</h3>' + (b.review ? '<p class="review-text">' + esc(b.review) + '</p><button type="button" class="link" data-act="redit">Изменить отзыв</button>' : '<p class="muted">Отзыва пока нет.</p><button type="button" class="link" data-act="redit">Написать отзыв</button>');
   }
   function quoteHTML(q) {
-    return '<figure class="quote" data-id="' + esc(q.id) + '"><blockquote>' + esc(quoteWrap(q.text)) + '</blockquote>' +
+    return '<figure class="quote" data-id="' + esc(q.id) + '"><blockquote class="clamp">' + esc(quoteWrap(q.text)) + '</blockquote>' + MORE_BTN +
       (q.ref ? '<span class="ref">' + esc(q.ref) + '</span>' : '') +
       (q.comment ? '<span class="cmt">Мой комментарий: ' + esc(q.comment) + '</span>' : '') +
+      '<button type="button" class="x ed" data-act="editq" data-id="' + esc(q.id) + '" aria-label="Изменить цитату">' + PEN_SVG + '</button>' +
       '<button type="button" class="x" data-act="delq" data-id="' + esc(q.id) + '" aria-label="Удалить цитату">' + X_SVG + '</button></figure>';
   }
   function thoughtHTML(t) {
-    return '<p class="thought" data-id="' + esc(t.id) + '">' + esc(t.text) + '<button type="button" class="x" data-act="delt" data-id="' + esc(t.id) + '" aria-label="Удалить мысль">' + X_SVG + '</button></p>';
+    return '<div class="thought" data-id="' + esc(t.id) + '"><div class="txt clamp">' + esc(t.text) + '</div>' + MORE_BTN +
+      '<button type="button" class="x ed" data-act="editt" data-id="' + esc(t.id) + '" aria-label="Изменить мысль">' + PEN_SVG + '</button>' +
+      '<button type="button" class="x" data-act="delt" data-id="' + esc(t.id) + '" aria-label="Удалить мысль">' + X_SVG + '</button></div>';
+  }
+  const PEN_SVG = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>';
+  function quoteEditHTML(q) {
+    return '<div class="nform inline"><label for="eqText">Цитата</label><textarea id="eqText" class="inp" rows="5">' + esc(q.text) + '</textarea>' +
+      '<label for="eqRef">Где в книге</label><input id="eqRef" class="inp" value="' + esc(q.ref || '') + '" placeholder="Глава, страница">' +
+      '<label for="eqCmt">Мой комментарий</label><textarea id="eqCmt" class="inp" rows="2" placeholder="Необязательно">' + esc(q.comment || '') + '</textarea>' +
+      '<span class="err is-hidden" id="eqErr">Цитата не может быть пустой</span>' +
+      '<div class="acts"><button type="button" class="btn btn-red btn-sm" data-act="qsave" data-id="' + esc(q.id) + '">Сохранить</button><button type="button" class="btn btn-ghost btn-sm" data-act="qcancel" data-id="' + esc(q.id) + '">Отмена</button></div></div>';
+  }
+  function thoughtEditHTML(t) {
+    return '<div class="nform inline"><label for="etText" class="sr">Мысль</label><textarea id="etText" class="inp" rows="8">' + esc(t.text) + '</textarea>' +
+      '<span class="err is-hidden" id="etErr" style="color:#F3A19D">Мысль не может быть пустой</span>' +
+      '<div class="acts"><button type="button" class="btn btn-red btn-sm" data-act="tsave" data-id="' + esc(t.id) + '">Сохранить</button><button type="button" class="btn btn-ghost btn-sm" data-act="tcancel" data-id="' + esc(t.id) + '">Отмена</button></div></div>';
+  }
+  // Заменить запись на свежую разметку.
+  function replaceItem(el, html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const fresh = tmp.firstElementChild;
+    el.replaceWith(fresh);
+    setupClamps(fresh);
+    return fresh;
+  }
+  function cancelEdit(el, b) {
+    if (!el) return;
+    const q = (b.quotes || []).find(x => x.id === el.dataset.id);
+    const t = (b.thoughts || []).find(x => x.id === el.dataset.id);
+    if (q) replaceItem(el, quoteHTML(q)); else if (t) replaceItem(el, thoughtHTML(t)); else el.remove();
+  }
+
+  /* Длинные цитаты и мысли показываем первыми строками, остальное по кнопке. */
+  const MORE_BTN = '<button type="button" class="more" data-act="more" aria-expanded="false" hidden>Читать полностью</button>';
+  function setupClamps(root) {
+    $$('.clamp', root || document).forEach(box => {
+      const btn = box.parentElement.querySelector(':scope > .more');
+      if (!btn || box.classList.contains('open')) return;
+      btn.hidden = box.scrollHeight <= box.clientHeight + 2;
+    });
+  }
+  function toggleClamp(btn) {
+    const box = btn.parentElement.querySelector(':scope > .clamp');
+    if (!box) return;
+    const from = box.offsetHeight;
+    const open = !box.classList.contains('open');
+    box.classList.toggle('open', open);
+    const to = box.offsetHeight;
+    btn.textContent = open ? 'Свернуть' : 'Читать полностью';
+    btn.setAttribute('aria-expanded', open);
+    anim(box, [{ height: from + 'px', overflow: 'hidden' }, { height: to + 'px', overflow: 'hidden' }], { duration: Math.min(700, 300 + Math.abs(to - from) * 0.6) });
+    if (!open) {
+      const top = btn.parentElement.getBoundingClientRect().top;
+      if (top < 0) btn.parentElement.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+    }
   }
   const quotesList = b => (b.quotes || []).length ? b.quotes.map(quoteHTML).join('') : '<p class="muted">Цитат пока нет.</p>';
   const thoughtsList = b => (b.thoughts || []).length ? b.thoughts.map(thoughtHTML).join('') : '<p class="muted">Мыслей пока нет.</p>';
@@ -344,6 +400,7 @@
       '</div>';
 
     if (reading) requestAnimationFrame(() => { const bar = $('#pBar'); if (bar) bar.style.width = pct(b) + '%'; });
+    setupClamps(v);
     if (!enter) { $$('.fact dd', v).forEach(dd => { const c = dd.dataset.count; dd.textContent = c === '' ? '—' : c; }); return; }
     if (RM) return;
     const d0 = 300;
@@ -394,7 +451,7 @@
 
   /* ---------- события страницы книги ---------- */
   const bookEl = $('#book');
-  const READ_ONLY_ACTS = new Set(['back', 'qclose', 'tclose', 'rcancel', 'delno', 'gdone']);
+  const READ_ONLY_ACTS = new Set(['back', 'qclose', 'tclose', 'rcancel', 'delno', 'gdone', 'more', 'qcancel', 'tcancel']);
   bookEl.addEventListener('click', e => {
     const t = e.target.closest('[data-act],[data-rate]');
     if (!t) return;
@@ -413,6 +470,37 @@
       return;
     }
     if (act === 'back') backToList();
+    else if (act === 'more') toggleClamp(t);
+    else if (act === 'editq' || act === 'editt') {
+      const isQ = act === 'editq';
+      const item = (isQ ? b.quotes : b.thoughts).find(x => x.id === t.dataset.id);
+      if (!item) return;
+      $$('.editing', bookEl).forEach(el => cancelEdit(el, b));
+      const el = bookEl.querySelector((isQ ? '.quote' : '.thought') + '[data-id="' + CSS.escape(item.id) + '"]');
+      if (!el) return;
+      el.classList.add('editing');
+      el.innerHTML = isQ ? quoteEditHTML(item) : thoughtEditHTML(item);
+      anim(el, [{ opacity: 0.3, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 320 });
+      const ta = $(isQ ? '#eqText' : '#etText', el);
+      ta.focus({ preventScroll: true });
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+    else if (act === 'qcancel' || act === 'tcancel') cancelEdit(t.closest('.editing'), b);
+    else if (act === 'qsave' || act === 'tsave') {
+      const isQ = act === 'qsave';
+      const el = t.closest('.editing');
+      const item = (isQ ? b.quotes : b.thoughts).find(x => x.id === t.dataset.id);
+      if (!el || !item) return;
+      const text = $(isQ ? '#eqText' : '#etText', el).value.trim();
+      if (!text) { showErr(isQ ? '#eqErr' : '#etErr', isQ ? '#eqText' : '#etText'); return; }
+      item.text = text;
+      if (isQ) { item.ref = $('#eqRef', el).value.trim(); item.comment = $('#eqCmt', el).value.trim(); }
+      touch(b);
+      save(isQ ? 'Поправил цитату из «' + b.title + '»' : 'Поправил мысль к книге «' + b.title + '»');
+      const fresh = replaceItem(el, isQ ? quoteHTML(item) : thoughtHTML(item));
+      anim(fresh, [{ backgroundColor: 'rgba(200,35,30,.35)' }, { backgroundColor: 'rgba(200,35,30,0)' }], { duration: 1100 });
+      toast(isQ ? 'Цитата обновлена' : 'Мысль обновлена');
+    }
     else if (act === 'edit') openPanel(b);
     else if (act === 'del') {
       const box = $('#bActs');
@@ -497,6 +585,7 @@
       b.quotes = (b.quotes || []).concat(q); touch(b); save('Добавил цитату из «' + b.title + '»');
       const box = $('#quotes'); if (!box.querySelector('.quote')) box.innerHTML = '';
       box.insertAdjacentHTML('beforeend', quoteHTML(q));
+      setupClamps(box.lastElementChild);
       anim(box.lastElementChild, [{ opacity: 0, transform: 'translateX(-40px)', backgroundColor: 'rgba(200,35,30,.35)' }, { opacity: 1, transform: 'none', backgroundColor: 'rgba(200,35,30,.18)', offset: 0.5 }, { backgroundColor: 'rgba(200,35,30,0)' }], { duration: 1200 });
       e.target.reset(); closeForm('q'); refreshCounts(b); toast('Цитата сохранена');
     }
@@ -507,6 +596,7 @@
       b.thoughts = (b.thoughts || []).concat(t); touch(b); save('Записал мысль к книге «' + b.title + '»');
       const box = $('#thoughts'); if (!box.querySelector('.thought')) box.innerHTML = '';
       box.insertAdjacentHTML('beforeend', thoughtHTML(t));
+      setupClamps(box.lastElementChild);
       anim(box.lastElementChild, [{ opacity: 0, transform: 'translateX(-40px)', color: '#C8231E' }, { opacity: 1, transform: 'none', color: '#DEDAD0' }], { duration: 900 });
       e.target.reset(); closeForm('t'); refreshCounts(b); toast('Мысль записана');
     }
@@ -929,8 +1019,8 @@
     if (t.dataset.act === 'clear') { state.genre = 'all'; state.q = ''; $('#q').value = ''; renderChips(); renderList(); }
   });
   let rT;
-  window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => placeSortInd(true), 120); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => placeSortInd(true));
+  window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => { placeSortInd(true); if (state.view === 'book') setupClamps(bookEl); }, 120); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { placeSortInd(true); setupClamps(bookEl); });
 
   /* ---------- данные с другого устройства ---------- */
   Store.onStatus(renderStatus);

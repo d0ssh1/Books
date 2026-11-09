@@ -262,3 +262,16 @@ textarea.inp{resize:vertical;min-height:90px}
 .file-btn:focus-within{outline:3px solid var(--red);outline-offset:2px}
 .res-src{font-size:13px;color:var(--ink-2)}
 .res:hover .res-src,.res:focus-visible .res-src{color:#C9C4B8}
+
+/* абзацы и сворачивание длинных записей */
+.review-text,.quote blockquote,.quote .cmt,.thought .txt{white-space:pre-line}
+.clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;line-clamp:5;overflow:hidden}
+.clamp.open{display:block;-webkit-line-clamp:unset;line-clamp:none}
+.more{display:inline-block;margin-top:8px;padding:4px 0;background:none;border:0;cursor:pointer;color:inherit;font:500 15px/1.2 var(--display);text-transform:uppercase;letter-spacing:.02em;text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:2px;text-underline-offset:4px;transition:text-decoration-thickness .2s}
+.more:hover{text-decoration-thickness:4px}
+.quote .more+.ref{margin-top:4px}
+.quote{padding-right:88px}
+.thought{padding-right:84px}
+.x.ed{right:40px}
+.quote.editing,.thought.editing{padding-right:0}
+.nform.inline{padding:0}
