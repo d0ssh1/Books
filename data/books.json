@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-15T09:32:23.235Z",
+  "updated": "2026-11-15T09:35:04.256Z",
   "books": [
     {
       "status": "read",
@@ -38,7 +38,7 @@
       "author": "Го Мён Хван",
       "year": 2025,
       "pages": 180,
-      "updatedAt": "2026-11-15T09:32:23.235Z",
+      "updatedAt": "2026-11-15T09:35:04.256Z",
       "id": "bmw8tgyezgql8",
       "createdAt": "2026-11-09T05:24:34.235Z",
       "quotes": [
