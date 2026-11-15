@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-09T06:08:00.104Z",
+  "updated": "2026-11-15T09:28:35.817Z",
   "books": [
     {
       "status": "read",
@@ -24,21 +24,21 @@
       "thoughts": []
     },
     {
-      "status": "reading",
+      "status": "read",
       "genres": [
         "Саморазвитие"
       ],
       "genresAuto": false,
       "rating": 7,
       "started": "2026-11-07",
-      "finished": "",
-      "page": 50,
+      "finished": "2026-11-15",
+      "page": 180,
       "review": "",
       "title": "Невидимые радости жизни",
       "author": "Го Мён Хван",
       "year": 2025,
-      "pages": 256,
-      "updatedAt": "2026-11-09T06:08:00.104Z",
+      "pages": 180,
+      "updatedAt": "2026-11-15T09:28:35.816Z",
       "id": "bmw8tgyezgql8",
       "createdAt": "2026-11-09T05:24:34.235Z",
       "quotes": [
