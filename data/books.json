@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-15T10:36:00.795Z",
+  "updated": "2026-11-15T10:36:09.885Z",
   "books": [
     {
       "status": "read",
@@ -29,7 +29,7 @@
         "Саморазвитие"
       ],
       "genresAuto": false,
-      "rating": 7,
+      "rating": 7.5,
       "started": "2026-11-07",
       "finished": "2026-11-15",
       "page": 180,
@@ -38,7 +38,7 @@
       "author": "Го Мён Хван",
       "year": 2025,
       "pages": 180,
-      "updatedAt": "2026-11-15T10:36:00.795Z",
+      "updatedAt": "2026-11-15T10:36:09.885Z",
       "id": "bmw8tgyezgql8",
       "createdAt": "2026-11-09T05:24:34.235Z",
       "quotes": [
