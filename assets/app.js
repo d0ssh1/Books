@@ -28,6 +28,9 @@
   function plural(n, one, few, many) { const a = n % 10, b = n % 100; if (a === 1 && b !== 11) return one; if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few; return many; }
   function quoteWrap(t) { t = String(t || '').trim(); return /^[«"„“]/.test(t) ? t : '«' + t.replace(/[.]$/, '') + '»' + (/[.]$/.test(t) ? '.' : ''); }
   const surname = a => { const p = String(a || '').trim().split(/\s+/); return p[p.length - 1] || ''; };
+  // Оценка может быть с половинкой: 7.5 показываем как «7,5».
+  const fmtRate = n => String(n).replace('.', ',');
+  const level = (i, r) => !r ? 0 : r >= i ? 2 : r >= i - 0.5 ? 1 : 0;
   const pct = b => b.pages ? Math.min(100, Math.round((b.page || 0) / b.pages * 100)) : 0;
   const nid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const X_SVG = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"><path d="M5 5l14 14M19 5L5 19"/></svg>';
@@ -99,7 +102,7 @@
   $('#saved').addEventListener('click', e => { if (e.target.closest('[data-act="settings"]')) openSettings(); });
 
   /* ---------- список ---------- */
-  function blocks(r) { let s = ''; for (let i = 1; i <= 10; i++) s += '<i class="blk' + (r && i <= r ? ' on' : '') + '"></i>'; return s; }
+  function blocks(r) { let s = ''; for (let i = 1; i <= 10; i++) { const l = level(i, r); s += '<i class="blk' + (l === 2 ? ' on' : l === 1 ? ' half' : '') + '"></i>'; } return s; }
   function shortDate(b) {
     if (b.status === 'reading') return 'читаю';
     if (!b.finished) return '—';
@@ -108,7 +111,7 @@
   }
   function rowHTML(b) {
     const g = (b.genres || []).map(x => x.toLowerCase()).join(', ');
-    const aria = b.rating ? 'Оценка ' + b.rating + ' из 10' : (b.status === 'reading' ? 'Ещё читаю' : 'Без оценки');
+    const aria = b.rating ? 'Оценка ' + fmtRate(b.rating) + ' из 10' : (b.status === 'reading' ? 'Ещё читаю' : 'Без оценки');
     return '<button type="button" class="row-btn" data-open="' + esc(b.id) + '">' +
       '<span class="r-date">' + esc(shortDate(b)) + (b.status === 'reading' ? '<span class="r-pct">' + pct(b) + '%</span>' : '') + '</span>' +
       '<span class="r-main"><span class="r-author">' + esc(b.author) + '</span><span class="r-title">' + esc(b.title) + '</span></span>' +
@@ -226,7 +229,7 @@
     if (RM) return;
     created.forEach((el, i) => {
       anim(el, [{ opacity: 0, transform: 'translateX(-40px)', clipPath: 'inset(0 100% 0 0)' }, { opacity: 1, transform: 'none', clipPath: 'inset(0 0 0 0)' }], { duration: 700, delay: 150 + Math.min(i, 14) * 70 });
-      $$('.blk.on', el).forEach((k, j) => anim(k, [{ transform: 'skewX(-12deg) scaleY(0)' }, { transform: 'skewX(-12deg) scaleY(1)' }], { duration: 360, delay: 450 + Math.min(i, 14) * 70 + j * 30 }));
+      $$('.blk.on,.blk.half', el).forEach((k, j) => anim(k, [{ transform: 'skewX(-12deg) scaleY(0)' }, { transform: 'skewX(-12deg) scaleY(1)' }], { duration: 360, delay: 450 + Math.min(i, 14) * 70 + j * 30 }));
     });
   }
   function rowsReturn() {
@@ -267,7 +270,11 @@
   /* ---------- страница книги ---------- */
   function ratingButtons(r, sm) {
     let s = '<div class="rbs' + (sm ? ' sm' : '') + '" role="group" aria-label="Оценка из 10">';
-    for (let i = 1; i <= 10; i++) s += '<button type="button" class="rb' + (r && i <= r ? ' on' : '') + '" data-rate="' + i + '" aria-label="Оценка ' + i + '" aria-pressed="' + (r === i) + '"></button>';
+    for (let i = 1; i <= 10; i++) {
+      const l = level(i, r);
+      const half = v => '<button type="button" class="h' + (r && v <= r ? ' on' : '') + '" data-rate="' + v + '" aria-label="Оценка ' + fmtRate(v) + '" aria-pressed="' + (r === v) + '"></button>';
+      s += '<span class="rb' + (l === 2 ? ' on' : l === 1 ? ' half' : '') + '" data-seg="' + i + '">' + half(i - 0.5) + half(i) + '</span>';
+    }
     return s + '</div>';
   }
   function factsHTML(b) {
@@ -375,7 +382,7 @@
       '<div class="title-wrap"><h2 class="b-title" aria-label="' + esc(b.title) + '"><span aria-hidden="true">' + splitChars(b.title) + '</span></h2><div class="stamp" id="stamp" hidden aria-hidden="true">Прочитано</div></div>' +
       '<dl class="facts" id="facts">' + factsHTML(b) + '</dl>' +
       (reading ? '<div class="progress" id="progress"><label for="pPage">Я на странице</label><input id="pPage" class="inp" type="number" min="0" ' + (b.pages ? 'max="' + b.pages + '"' : '') + ' value="' + (b.page || 0) + '"><span>из ' + (b.pages || '?') + '</span><div class="pbar" aria-hidden="true"><i id="pBar"></i></div><span class="pct" id="pPct">' + pct(b) + '%</span><button type="button" class="btn btn-red" data-act="finish">Дочитал</button></div>' : '') +
-      '<div class="rate-row" id="rateRow"><div class="rate-l">' + ratingButtons(b.rating) + '<span class="rate-num"><span class="v" id="rNum">' + (b.rating || '—') + '</span><span class="of">/ 10</span></span></div><span class="dates">' + esc(datesText(b)) + '</span></div>' +
+      '<div class="rate-row" id="rateRow"><div class="rate-l">' + ratingButtons(b.rating) + '<span class="rate-num"><span class="v" id="rNum">' + (b.rating ? fmtRate(b.rating) : '—') + '</span><span class="of">/ 10</span></span></div><span class="dates">' + esc(datesText(b)) + '</span></div>' +
       '<div class="genres-row" id="gRow">' + genresHTML(b, false) + '</div>' +
       '<section class="review" id="review" aria-label="Отзыв">' + reviewHTML(b, false) + '</section>' +
       '<div class="cols">' +
@@ -415,7 +422,7 @@
       dd.textContent = from;
       setTimeout(() => countUp(dd, to, from, 1000), d0 + 300 + i * 90);
     });
-    $$('.rb.on', v).forEach((k, j) => anim(k, [{ transform: 'skewX(-12deg) scaleY(0)' }, { transform: 'skewX(-12deg) scaleY(1.15)', offset: 0.7 }, { transform: 'skewX(-12deg) scaleY(1)' }], { duration: 420, delay: d0 + 600 + j * 45 }));
+    $$('.rb.on,.rb.half', v).forEach((k, j) => anim(k, [{ transform: 'skewX(-12deg) scaleY(0)' }, { transform: 'skewX(-12deg) scaleY(1.15)', offset: 0.7 }, { transform: 'skewX(-12deg) scaleY(1)' }], { duration: 420, delay: d0 + 600 + j * 45 }));
     $$('.gchip', v).forEach((g, j) => anim(g, [{ opacity: 0, transform: 'scale(1.7) rotate(-8deg)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: d0 + 800 + j * 90, easing: 'cubic-bezier(.3,1.4,.5,1)' }));
   }
 
@@ -428,24 +435,29 @@
   }
 
   function setRatingUI(group, n, old, animate) {
-    $$('.rb', group).forEach(btn => {
-      const i = Number(btn.dataset.rate);
-      btn.classList.toggle('on', !!n && i <= n);
-      btn.setAttribute('aria-pressed', n === i);
-      if (!animate) return;
-      if (n && i <= n && (!old || i > old)) anim(btn, [{ transform: 'skewX(-12deg) scaleY(.2)' }, { transform: 'skewX(-12deg) scaleY(1.25)', offset: 0.6 }, { transform: 'skewX(-12deg) scaleY(1)' }], { duration: 420, delay: (i - (old || 0) - 1) * 40 });
+    $$('.h', group).forEach(btn => {
+      const v = Number(btn.dataset.rate);
+      btn.classList.toggle('on', !!n && v <= n);
+      btn.setAttribute('aria-pressed', n === v);
+    });
+    let k = 0;
+    $$('.rb', group).forEach(seg => {
+      const i = Number(seg.dataset.seg), l = level(i, n);
+      seg.classList.toggle('on', l === 2);
+      seg.classList.toggle('half', l === 1);
+      if (animate && l > level(i, old)) anim(seg, [{ transform: 'skewX(-12deg) scaleY(.2)' }, { transform: 'skewX(-12deg) scaleY(1.25)', offset: 0.6 }, { transform: 'skewX(-12deg) scaleY(1)' }], { duration: 420, delay: (k++) * 40 });
     });
   }
   function previewRating(root) {
     root.addEventListener('mouseover', e => {
-      const r = e.target.closest('.rb'); if (!r) return;
+      const r = e.target.closest('.h'); if (!r) return;
       const grp = r.closest('.rbs'), n = Number(r.dataset.rate);
       grp.classList.add('preview');
-      $$('.rb', grp).forEach(x => x.classList.toggle('pre', Number(x.dataset.rate) <= n));
+      $$('.h', grp).forEach(x => x.classList.toggle('pre', Number(x.dataset.rate) <= n));
     });
     root.addEventListener('mouseout', e => {
       const grp = e.target.closest('.rbs'); if (!grp) return;
-      if (!grp.contains(e.relatedTarget)) { grp.classList.remove('preview'); $$('.rb', grp).forEach(x => x.classList.remove('pre')); }
+      if (!grp.contains(e.relatedTarget)) { grp.classList.remove('preview'); $$('.h', grp).forEach(x => x.classList.remove('pre')); }
     });
   }
 
@@ -461,10 +473,10 @@
     if (t.dataset.rate) {
       const n = Number(t.dataset.rate), old = b.rating;
       if (n === old) return;
-      b.rating = n; touch(b); save('Поставил «' + b.title + '» ' + n + ' из 10');
+      b.rating = n; touch(b); save('Поставил «' + b.title + '» ' + fmtRate(n) + ' из 10');
       const grp = t.closest('.rbs'); grp.classList.remove('preview');
       setRatingUI(grp, n, old, true);
-      const num = $('#rNum'); num.textContent = n;
+      const num = $('#rNum'); num.textContent = fmtRate(n);
       anim(num, [{ transform: 'translateY(-70%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380 });
       const ask = $('#ask'); if (ask) anim(ask, [{ opacity: 1 }, { opacity: 0, transform: 'translateX(20px)' }], { duration: 260, fill: 'forwards' }).finished.then(() => ask.remove());
       return;
@@ -689,7 +701,7 @@
       '<div class="grid2 pi"><div class="f"><label for="fStart">Начал</label><input id="fStart" class="inp" type="date"></div>' +
         '<div class="f" id="finBox"><label for="fFin">Дочитал</label><input id="fFin" class="inp" type="date"></div>' +
         '<div class="f" id="pageBox"><label for="fPage">Сейчас на странице</label><input id="fPage" class="inp" type="number" inputmode="numeric"></div></div>' +
-      '<div class="f pi"><span class="flabel">Оценка</span><div class="rate-l">' + ratingButtons(draft.rating, true) + '<span class="rate-num" style="font-size:28px"><span class="v" id="fRNum">' + (draft.rating || '—') + '</span><span class="of">/ 10</span></span></div></div>' +
+      '<div class="f pi"><span class="flabel">Оценка</span><div class="rate-l">' + ratingButtons(draft.rating, true) + '<span class="rate-num" style="font-size:28px"><span class="v" id="fRNum">' + (draft.rating ? fmtRate(draft.rating) : '—') + '</span><span class="of">/ 10</span></span></div></div>' +
       '<div class="f pi"><span class="flabel">Жанры</span><div class="gchips" id="fG"></div><div class="gedit"><label for="fGAdd" class="sr">Добавить жанр</label><select id="fGAdd" class="inp"></select></div><p class="gnote" id="fGNote"></p></div>' +
       '<div class="f pi"><label for="fReview">Отзыв</label><textarea id="fReview" class="inp" rows="4" placeholder="Что думаешь о книге"></textarea></div>' +
       '<div class="pactions pi"><button type="submit" class="btn btn-red">' + (ed ? 'Сохранить' : 'Внести книгу') + '</button><button type="button" class="btn btn-ghost" data-act="close">Отмена</button></div>' +
@@ -853,7 +865,7 @@
       draft.rating = old === n ? null : n;
       const grp = t.closest('.rbs'); grp.classList.remove('preview');
       setRatingUI(grp, draft.rating, old, true);
-      const v = $('#fRNum'); v.textContent = draft.rating || '—';
+      const v = $('#fRNum'); v.textContent = draft.rating ? fmtRate(draft.rating) : '—';
       anim(v, [{ transform: 'translateY(-70%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 340 });
       return;
     }
@@ -951,7 +963,7 @@
       const cell = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       const head = ['Название', 'Автор', 'Год издания', 'Страниц', 'Статус', 'Начал', 'Дочитал', 'Оценка из 10', 'Жанры', 'Отзыв', 'Цитаты', 'Мысли'];
       const rows = list.map(b => [
-        b.title, b.author, b.year, b.pages, b.status === 'reading' ? 'Читаю' : 'Прочитано', b.started, b.finished, b.rating,
+        b.title, b.author, b.year, b.pages, b.status === 'reading' ? 'Читаю' : 'Прочитано', b.started, b.finished, b.rating ? fmtRate(b.rating) : '',
         (b.genres || []).join(', '), b.review,
         (b.quotes || []).map(q => quoteWrap(q.text) + (q.ref ? ' (' + q.ref + ')' : '') + (q.comment ? ' — ' + q.comment : '')).join('\n'),
         (b.thoughts || []).map(t => t.text).join('\n')
@@ -967,7 +979,7 @@
         if (b.genres && b.genres.length) meta.push(b.genres.join(', ').toLowerCase());
         if (meta.length) out.push(meta.join(', ') + '  ');
         const d = datesText(b); if (d) out.push(d + '  ');
-        out.push('Оценка: ' + (b.rating ? b.rating + ' из 10' : 'нет'), '');
+        out.push('Оценка: ' + (b.rating ? fmtRate(b.rating) + ' из 10' : 'нет'), '');
         if (b.review) out.push(b.review, '');
         if ((b.quotes || []).length) {
           out.push('### Цитаты', '');
