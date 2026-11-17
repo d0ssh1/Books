@@ -308,3 +308,19 @@ textarea.inp{resize:vertical;min-height:90px}
 .prose p{margin:0;text-indent:1.6em}
 .prose p+p{margin-top:.3em}
 .review .more{display:block;margin-bottom:10px}
+
+/* мысли: без красной строки, абзацы разделены просветом */
+.thought .prose p{text-indent:0}
+.thought .prose p+p{margin-top:.75em}
+
+/* Чёрная плашка мыслей выходит в поля страницы, а текст внутри стоит по той же линии, что и цитаты */
+@media (min-width:760px){
+  .wrap{padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}
+}
+.col-t{width:auto;
+  margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (min-width:760px){
+  .col-t{margin-left:calc(-1 * max(40px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(40px,env(safe-area-inset-right,0px)));
+    padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}
+}
