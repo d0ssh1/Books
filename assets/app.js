@@ -302,7 +302,7 @@
   }
   function reviewHTML(b, editing) {
     if (editing) return '<h3 class="sec-h">Отзыв</h3><div class="nform" style="padding:0"><label for="rText" class="sr">Отзыв</label><textarea id="rText" class="inp" rows="5">' + esc(b.review || '') + '</textarea><div class="acts"><button type="button" class="btn btn-red btn-sm" data-act="rsave">Сохранить отзыв</button><button type="button" class="btn btn-ghost btn-sm" data-act="rcancel">Отмена</button></div></div>';
-    return '<h3 class="sec-h">Отзыв</h3>' + (b.review ? '<p class="review-text">' + esc(b.review) + '</p><button type="button" class="link" data-act="redit">Изменить отзыв</button>' : '<p class="muted">Отзыва пока нет.</p><button type="button" class="link" data-act="redit">Написать отзыв</button>');
+    return '<h3 class="sec-h">Отзыв</h3>' + (b.review ? '<div class="review-text prose clamp">' + paras(b.review) + '</div>' + MORE_BTN + '<button type="button" class="link" data-act="redit">Изменить отзыв</button>' : '<p class="muted">Отзыва пока нет.</p><button type="button" class="link" data-act="redit">Написать отзыв</button>');
   }
   function quoteHTML(q) {
     return '<figure class="quote" data-id="' + esc(q.id) + '"><blockquote class="clamp">' + esc(quoteWrap(q.text)) + '</blockquote>' + MORE_BTN +
@@ -312,7 +312,7 @@
       '<button type="button" class="x" data-act="delq" data-id="' + esc(q.id) + '" aria-label="Удалить цитату">' + X_SVG + '</button></figure>';
   }
   function thoughtHTML(t) {
-    return '<div class="thought" data-id="' + esc(t.id) + '"><div class="txt clamp">' + esc(t.text) + '</div>' + MORE_BTN +
+    return '<div class="thought" data-id="' + esc(t.id) + '"><div class="txt prose clamp">' + paras(t.text) + '</div>' + MORE_BTN +
       '<button type="button" class="x ed" data-act="editt" data-id="' + esc(t.id) + '" aria-label="Изменить мысль">' + PEN_SVG + '</button>' +
       '<button type="button" class="x" data-act="delt" data-id="' + esc(t.id) + '" aria-label="Удалить мысль">' + X_SVG + '</button></div>';
   }
@@ -347,6 +347,10 @@
 
   /* Длинные цитаты и мысли показываем первыми строками, остальное по кнопке. */
   const MORE_BTN = '<button type="button" class="more" data-act="more" aria-expanded="false" hidden>Читать полностью</button>';
+  // Текст с абзацами: каждый перенос строки становится абзацем с красной строкой.
+  function paras(text) {
+    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => '<p>' + esc(x) + '</p>').join('');
+  }
   function setupClamps(root) {
     $$('.clamp', root || document).forEach(box => {
       const btn = box.parentElement.querySelector(':scope > .more');
@@ -534,10 +538,11 @@
       anim(chip, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.4) rotate(10deg)' }], { duration: 260, fill: 'forwards' }).finished.then(() => { $('#gRow').innerHTML = genresHTML(b, true); });
     }
     else if (act === 'redit') { $('#review').innerHTML = reviewHTML(b, true); const ta = $('#rText'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
-    else if (act === 'rcancel') { $('#review').innerHTML = reviewHTML(b, false); }
+    else if (act === 'rcancel') { $('#review').innerHTML = reviewHTML(b, false); setupClamps($('#review')); }
     else if (act === 'rsave') {
       b.review = $('#rText').value.trim(); touch(b); save('Обновил отзыв о книге «' + b.title + '»');
       $('#review').innerHTML = reviewHTML(b, false);
+      setupClamps($('#review'));
       const p = $('#review .review-text'); if (p) anim(p, [{ backgroundColor: 'rgba(200,35,30,.25)' }, { backgroundColor: 'rgba(200,35,30,0)' }], { duration: 900 });
       toast('Отзыв сохранён');
     }
