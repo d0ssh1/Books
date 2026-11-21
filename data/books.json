@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-21T05:27:41.927Z",
+  "updated": "2026-11-21T09:17:16.368Z",
   "books": [
     {
       "status": "read",
@@ -292,7 +292,8 @@
       "status": "reading",
       "genres": [
         "Классика",
-        "Психология"
+        "Психология",
+        "Психологическая проза"
       ],
       "genresAuto": false,
       "rating": null,
@@ -304,7 +305,7 @@
       "author": "Владимир Набоков",
       "year": 1967,
       "pages": 9499,
-      "updatedAt": "2026-11-21T05:27:41.927Z",
+      "updatedAt": "2026-11-21T09:17:16.368Z",
       "id": "bmwpujldp3n35",
       "createdAt": "2026-11-21T03:26:41.917Z",
       "quotes": [],
