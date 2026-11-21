@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-21T03:21:32.178Z",
+  "updated": "2026-11-21T03:21:38.700Z",
   "books": [
     {
       "status": "read",
@@ -268,7 +268,7 @@
         "Современная проза"
       ],
       "genresAuto": true,
-      "rating": null,
+      "rating": 7.5,
       "started": "2026-11-17",
       "finished": "2026-11-21",
       "page": 192,
@@ -277,7 +277,7 @@
       "author": "Пауло Коэльо",
       "year": 1998,
       "pages": 192,
-      "updatedAt": "2026-11-21T03:21:32.178Z",
+      "updatedAt": "2026-11-21T03:21:38.700Z",
       "id": "bmwlvxlsvy04x",
       "createdAt": "2026-11-18T08:54:30.559Z",
       "quotes": [],
