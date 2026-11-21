@@ -205,7 +205,39 @@ window.Lookup = (function () {
     if (r.categories.length && !into.categories.length) into.categories = r.categories;
     if (!into.description && r.description) into.description = r.description;
   }
+  // Насколько название похоже на запрос: точное совпадение выше частичного.
+  function titleScore(r, q) {
+    const nq = keyPart(q);
+    let best = 0;
+    [r.title, r.titleEn].filter(Boolean).forEach(t => {
+      const nt = keyPart(t);
+      if (!nt) return;
+      let sc = 0;
+      if (nt === nq) sc = 3;
+      else if (nq.startsWith(nt) || nt.startsWith(nq)) sc = 2;
+      else if (nq.includes(nt) || nt.includes(nq)) sc = 1;
+      best = Math.max(best, sc);
+    });
+    if (/[а-яё]/i.test(q) && /[а-яё]/i.test(r.title)) best += 0.5;
+    if (r.source === 'Wikidata') best += 0.3;
+    return best;
+  }
   async function search(q) {
+    let found = await searchOnce(q);
+    // «1984 Оруэлл»: если ничего не нашлось, пробуем без первого или последнего слова и оставляем книги нужного автора.
+    const words = q.trim().split(/\s+/);
+    if (!found.length && words.length > 1) {
+      const tries = [[words.slice(0, -1).join(' '), words[words.length - 1]], [words.slice(1).join(' '), words[0]]];
+      for (const [rest, dropped] of tries) {
+        const list = await searchOnce(rest);
+        const stem = norm(dropped).slice(0, Math.max(3, Math.min(5, dropped.length - 1)));
+        const match = list.filter(r => norm(r.author).includes(stem) || norm(r.authorEn).includes(stem));
+        if (match.length) { found = match; break; }
+      }
+    }
+    return found;
+  }
+  async function searchOnce(q) {
     const [wd, gb, ol] = await Promise.allSettled([searchWikidata(q), searchGoogle(q), searchOpenLibrary(q)]);
     if (wd.status === 'rejected' && ol.status === 'rejected' && (gb.status === 'rejected' || !googleKey())) throw new Error('network');
     const pick = s => s.status === 'fulfilled' ? s.value : [];
@@ -218,10 +250,8 @@ window.Lookup = (function () {
       ks.forEach(k => index.set(k, r));
       out.push(r);
     });
-    if (/[а-яё]/i.test(q)) {
-      const cyr = r => /[а-яё]/i.test(r.title);
-      out.sort((a, b) => (cyr(b) ? 1 : 0) - (cyr(a) ? 1 : 0));
-    }
+    out.forEach((r, i) => { r._i = i; r._s = titleScore(r, q); });
+    out.sort((a, b) => b._s - a._s || a._i - b._i);
     const top = out.slice(0, 8);
     await Promise.all(top.map(async r => { r.author = (await Promise.all(r.author.split(', ').map(russianAuthor))).join(', '); }));
     return top;
@@ -230,7 +260,7 @@ window.Lookup = (function () {
   // Детали для выбранной книги: год первой публикации, страницы, жанры.
   async function enrich(r) {
     const tasks = [];
-    if (r.source === 'Wikidata' && (!r.pages || !r.subjects.length) && (r.titleEn || r.title)) {
+    if (r.source === 'Wikidata' && (r.titleEn || r.title)) {
       tasks.push(openLibraryByTitle(r.titleEn || r.title, r.authorEn || r.author).then(list => {
         const best = list[0];
         if (!best) return;
