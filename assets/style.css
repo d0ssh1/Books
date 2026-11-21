@@ -324,3 +324,57 @@ textarea.inp{resize:vertical;min-height:90px}
   .col-t{margin-left:calc(-1 * max(40px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(40px,env(safe-area-inset-right,0px)));
     padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}
 }
+
+/* ---------- редактор с форматированием ---------- */
+.rte{display:flex;flex-direction:column;min-width:0;border:3px solid var(--ink);background:var(--paper-hi);transition:border-color .2s,box-shadow .25s var(--ease)}
+.rte:focus-within{border-color:var(--red);box-shadow:4px 4px 0 var(--ink)}
+.col-t .rte{border-color:var(--paper)}
+.col-t .rte:focus-within{border-color:var(--red);box-shadow:4px 4px 0 var(--red)}
+.ed-bar{display:flex;flex-wrap:wrap;background:var(--ink)}
+.ed-btn{position:relative;overflow:hidden;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:42px;height:38px;padding:0 10px;border:0;background:none;color:var(--paper);cursor:pointer;font:500 18px/1 var(--display);text-transform:uppercase;transition:color .3s}
+.ed-btn::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--red);transform:translateY(101%);transition:transform .35s var(--ease)}
+.ed-btn:hover::before{transform:translateY(80%)}
+.ed-btn[aria-pressed="true"]{color:var(--paper-hi)}
+.ed-btn[aria-pressed="true"]::before{transform:none}
+.ed-btn b{font-weight:700}
+.ed-btn i{font-family:var(--body);font-style:italic;font-weight:500}
+.ed-btn u{text-decoration-thickness:2px;text-underline-offset:3px}
+.ed-btn s{text-decoration-thickness:2px}
+.ed-btn.wide{margin-left:auto;font-size:15px;letter-spacing:.02em;border-left:1px solid #4A4642}
+.ed-btn:focus-visible{outline:3px solid var(--red);outline-offset:-3px}
+.ed-sp-ico{display:inline-block;width:22px;height:12px;transform:skewX(-12deg);background:repeating-linear-gradient(-60deg,rgba(28,26,24,.55) 0 2px,transparent 2px 5px),var(--paper)}
+.ed-btn[aria-pressed="true"] .ed-sp-ico{background:repeating-linear-gradient(-60deg,rgba(200,35,30,.7) 0 2px,transparent 2px 5px),var(--paper-hi)}
+.ed-area.inp{position:relative;display:block;border:0;box-shadow:none;max-height:60vh;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text;line-height:1.5}
+.ed-area.inp:focus{box-shadow:none;outline:none}
+.ed-area.is-empty::before{content:attr(data-placeholder);position:absolute;left:12px;top:9px;color:#6E6962;pointer-events:none}
+.ed-area .sp{background:repeating-linear-gradient(-60deg,rgba(28,26,24,.2) 0 2px,transparent 2px 6px);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:1px 2px;box-shadow:inset 0 -2px 0 var(--ink)}
+.ed-area s{text-decoration-thickness:2px}
+.ed-area u{text-underline-offset:3px}
+
+/* ---------- форматирование в тексте ---------- */
+.review-text strong,.thought strong,.quote strong{font-weight:600}
+.review-text u,.thought u,.quote u{text-decoration-color:var(--red);text-decoration-thickness:2px;text-underline-offset:3px}
+.review-text s,.thought s,.quote s{text-decoration-thickness:2px}
+
+/* спойлер: штрихованная плашка, которая уезжает вправо, как шторка между страницами */
+.spoiler{cursor:pointer;color:transparent;padding:0 3px;margin:0 -1px;-webkit-box-decoration-break:clone;box-decoration-break:clone;
+  background-image:repeating-linear-gradient(-60deg,rgba(222,218,208,.18) 0 2px,transparent 2px 7px),linear-gradient(var(--ink),var(--ink));
+  background-repeat:no-repeat;background-position:right center,right center;background-size:100% 100%,100% 100%;
+  -webkit-user-select:none;user-select:none;
+  transition:background-size .55s var(--ease),color .3s .12s,text-decoration-color .3s}
+.spoiler:hover{background-image:repeating-linear-gradient(-60deg,rgba(243,239,230,.22) 0 2px,transparent 2px 7px),linear-gradient(var(--red),var(--red))}
+.spoiler:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.spoiler.open{color:inherit;background-size:0% 100%,0% 100%;-webkit-user-select:text;user-select:text;text-decoration:underline dashed var(--red) 2px;text-underline-offset:4px}
+.col-t .spoiler{background-image:repeating-linear-gradient(-60deg,rgba(28,26,24,.22) 0 2px,transparent 2px 7px),linear-gradient(var(--paper),var(--paper))}
+.col-t .spoiler:hover{background-image:repeating-linear-gradient(-60deg,rgba(28,26,24,.22) 0 2px,transparent 2px 7px),linear-gradient(var(--red),var(--red))}
+.ed-btn s{text-decoration-color:var(--red);text-decoration-thickness:3px}
+
+/* шапка на телефоне: размер слова считается от ширины экрана, чтобы кружок всегда помещался справа */
+@media (max-width:720px){
+  .hero-title{margin-right:72px}
+  .h1{font-size:min(100px,calc((100vw - 112px) / 5.3))}
+  .circle{right:-70px;top:4px;width:56px;height:56px}
+  /* плашка со счётчиком не должна растягивать блок заголовка, иначе кружок уезжает за край */
+  .hero-title{padding-bottom:62px}
+  .tag{position:absolute;left:8px;bottom:4px;margin:0;white-space:nowrap;font-size:24px}
+}

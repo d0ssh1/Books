@@ -301,13 +301,13 @@
     return '<div class="gchips" id="bChips">' + chips + '</div><p class="gnote">' + note + ' <button type="button" class="link" data-act="gedit">' + ((b.genres || []).length ? 'Исправить' : 'Добавить') + '</button></p>';
   }
   function reviewHTML(b, editing) {
-    if (editing) return '<h3 class="sec-h">Отзыв</h3><div class="nform" style="padding:0"><label for="rText" class="sr">Отзыв</label><textarea id="rText" class="inp" rows="5">' + esc(b.review || '') + '</textarea><div class="acts"><button type="button" class="btn btn-red btn-sm" data-act="rsave">Сохранить отзыв</button><button type="button" class="btn btn-ghost btn-sm" data-act="rcancel">Отмена</button></div></div>';
+    if (editing) return '<h3 class="sec-h">Отзыв</h3><div class="nform" style="padding:0">' + Rich.editor({ id: 'rText', value: b.review || '', rows: 6, label: 'Отзыв', placeholder: 'Что думаешь о книге' }) + '<div class="acts"><button type="button" class="btn btn-red btn-sm" data-act="rsave">Сохранить отзыв</button><button type="button" class="btn btn-ghost btn-sm" data-act="rcancel">Отмена</button></div></div>';
     return '<h3 class="sec-h">Отзыв</h3>' + (b.review ? '<div class="review-text prose clamp">' + paras(b.review) + '</div>' + MORE_BTN + '<button type="button" class="link" data-act="redit">Изменить отзыв</button>' : '<p class="muted">Отзыва пока нет.</p><button type="button" class="link" data-act="redit">Написать отзыв</button>');
   }
   function quoteHTML(q) {
-    return '<figure class="quote" data-id="' + esc(q.id) + '"><blockquote class="clamp">' + esc(quoteWrap(q.text)) + '</blockquote>' + MORE_BTN +
+    return '<figure class="quote" data-id="' + esc(q.id) + '"><blockquote class="clamp">' + Rich.html(quoteWrap(q.text)) + '</blockquote>' + MORE_BTN +
       (q.ref ? '<span class="ref">' + esc(q.ref) + '</span>' : '') +
-      (q.comment ? '<span class="cmt">Мой комментарий: ' + esc(q.comment) + '</span>' : '') +
+      (q.comment ? '<span class="cmt">Мой комментарий: ' + Rich.html(q.comment) + '</span>' : '') +
       '<button type="button" class="x ed" data-act="editq" data-id="' + esc(q.id) + '" aria-label="Изменить цитату">' + PEN_SVG + '</button>' +
       '<button type="button" class="x" data-act="delq" data-id="' + esc(q.id) + '" aria-label="Удалить цитату">' + X_SVG + '</button></figure>';
   }
@@ -318,14 +318,14 @@
   }
   const PEN_SVG = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>';
   function quoteEditHTML(q) {
-    return '<div class="nform inline"><label for="eqText">Цитата</label><textarea id="eqText" class="inp" rows="5">' + esc(q.text) + '</textarea>' +
+    return '<div class="nform inline"><label for="eqText">Цитата</label>' + Rich.editor({ id: 'eqText', value: q.text, rows: 5, label: 'Цитата' }) + '' +
       '<label for="eqRef">Где в книге</label><input id="eqRef" class="inp" value="' + esc(q.ref || '') + '" placeholder="Глава, страница">' +
-      '<label for="eqCmt">Мой комментарий</label><textarea id="eqCmt" class="inp" rows="2" placeholder="Необязательно">' + esc(q.comment || '') + '</textarea>' +
+      '<label for="eqCmt">Мой комментарий</label>' + Rich.editor({ id: 'eqCmt', value: q.comment || '', rows: 2, label: 'Мой комментарий', placeholder: 'Необязательно' }) + '' +
       '<span class="err is-hidden" id="eqErr">Цитата не может быть пустой</span>' +
       '<div class="acts"><button type="button" class="btn btn-red btn-sm" data-act="qsave" data-id="' + esc(q.id) + '">Сохранить</button><button type="button" class="btn btn-ghost btn-sm" data-act="qcancel" data-id="' + esc(q.id) + '">Отмена</button></div></div>';
   }
   function thoughtEditHTML(t) {
-    return '<div class="nform inline"><label for="etText" class="sr">Мысль</label><textarea id="etText" class="inp" rows="8">' + esc(t.text) + '</textarea>' +
+    return '<div class="nform inline"><label for="etText" class="sr">Мысль</label>' + Rich.editor({ id: 'etText', value: t.text, rows: 8, label: 'Мысль' }) + '' +
       '<span class="err is-hidden" id="etErr" style="color:#F3A19D">Мысль не может быть пустой</span>' +
       '<div class="acts"><button type="button" class="btn btn-red btn-sm" data-act="tsave" data-id="' + esc(t.id) + '">Сохранить</button><button type="button" class="btn btn-ghost btn-sm" data-act="tcancel" data-id="' + esc(t.id) + '">Отмена</button></div></div>';
   }
@@ -349,7 +349,7 @@
   const MORE_BTN = '<button type="button" class="more" data-act="more" aria-expanded="false" hidden>Читать полностью</button>';
   // Текст с абзацами: каждый перенос строки становится абзацем с красной строкой.
   function paras(text) {
-    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => '<p>' + esc(x) + '</p>').join('');
+    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => '<p>' + Rich.line(x) + '</p>').join('');
   }
   function setupClamps(root) {
     $$('.clamp', root || document).forEach(box => {
@@ -396,7 +396,7 @@
           '<div class="thoughts" id="thoughts">' + thoughtsList(b) + '</div>' +
           '<button type="button" class="btn btn-red" data-act="topen" id="tOpen">Записать мысль</button>' +
           '<div class="expand" id="tX"><div><form class="nform" id="tForm" novalidate>' +
-            '<label for="tText">Мысль</label><textarea id="tText" class="inp" rows="3" placeholder="Что пришло в голову"></textarea>' +
+            '<label for="tText">Мысль</label>' + Rich.editor({ id: 'tText', rows: 4, label: 'Мысль', placeholder: 'Что пришло в голову' }) + '' +
             '<span class="err is-hidden" id="tErr" style="color:#F3A19D">Впиши текст мысли</span>' +
             '<div class="acts"><button type="submit" class="btn btn-red btn-sm">Сохранить мысль</button><button type="button" class="btn btn-ghost btn-sm" data-act="tclose">Отмена</button></div>' +
           '</form></div></div></section>' : '') +
@@ -404,9 +404,9 @@
           '<div class="quotes" id="quotes">' + quotesList(b) + '</div>' +
           '<button type="button" class="btn btn-red" data-act="qopen" id="qOpen">Добавить цитату</button>' +
           '<div class="expand" id="qX"><div><form class="nform" id="qForm" novalidate>' +
-            '<label for="qText">Цитата</label><textarea id="qText" class="inp" rows="3" placeholder="Текст цитаты"></textarea>' +
+            '<label for="qText">Цитата</label>' + Rich.editor({ id: 'qText', rows: 3, label: 'Цитата', placeholder: 'Текст цитаты' }) + '' +
             '<label for="qRef">Где в книге</label><input id="qRef" class="inp" placeholder="Глава, страница">' +
-            '<label for="qCmt">Мой комментарий</label><textarea id="qCmt" class="inp" rows="2" placeholder="Необязательно"></textarea>' +
+            '<label for="qCmt">Мой комментарий</label>' + Rich.editor({ id: 'qCmt', rows: 2, label: 'Мой комментарий', placeholder: 'Необязательно' }) + '' +
             '<span class="err is-hidden" id="qErr">Впиши текст цитаты</span>' +
             '<div class="acts"><button type="submit" class="btn btn-red btn-sm">Сохранить цитату</button><button type="button" class="btn btn-ghost btn-sm" data-act="qclose">Отмена</button></div>' +
           '</form></div></div></section>' +
@@ -499,9 +499,7 @@
       el.classList.add('editing');
       el.innerHTML = isQ ? quoteEditHTML(item) : thoughtEditHTML(item);
       anim(el, [{ opacity: 0.3, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 320 });
-      const ta = $(isQ ? '#eqText' : '#etText', el);
-      ta.focus({ preventScroll: true });
-      ta.setSelectionRange(ta.value.length, ta.value.length);
+      Rich.focusEnd($(isQ ? '#eqText' : '#etText', el));
     }
     else if (act === 'qcancel' || act === 'tcancel') cancelEdit(t.closest('.editing'), b);
     else if (act === 'qsave' || act === 'tsave') {
@@ -509,10 +507,10 @@
       const el = t.closest('.editing');
       const item = (isQ ? b.quotes : b.thoughts).find(x => x.id === t.dataset.id);
       if (!el || !item) return;
-      const text = $(isQ ? '#eqText' : '#etText', el).value.trim();
+      const text = Rich.value($(isQ ? '#eqText' : '#etText', el));
       if (!text) { showErr(isQ ? '#eqErr' : '#etErr', isQ ? '#eqText' : '#etText'); return; }
       item.text = text;
-      if (isQ) { item.ref = $('#eqRef', el).value.trim(); item.comment = $('#eqCmt', el).value.trim(); }
+      if (isQ) { item.ref = $('#eqRef', el).value.trim(); item.comment = Rich.value($('#eqCmt', el)); }
       touch(b);
       save(isQ ? 'Поправил цитату из «' + b.title + '»' : 'Поправил мысль к книге «' + b.title + '»');
       const fresh = replaceItem(el, isQ ? quoteHTML(item) : thoughtHTML(item));
@@ -539,10 +537,10 @@
       b.genres = b.genres.filter(x => x !== g); b.genresAuto = false; touch(b); save('Поправил жанры книги «' + b.title + '»');
       anim(chip, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.4) rotate(10deg)' }], { duration: 260, fill: 'forwards' }).finished.then(() => { $('#gRow').innerHTML = genresHTML(b, true); });
     }
-    else if (act === 'redit') { $('#review').innerHTML = reviewHTML(b, true); const ta = $('#rText'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    else if (act === 'redit') { $('#review').innerHTML = reviewHTML(b, true); Rich.focusEnd($('#rText')); }
     else if (act === 'rcancel') { $('#review').innerHTML = reviewHTML(b, false); setupClamps($('#review')); }
     else if (act === 'rsave') {
-      b.review = $('#rText').value.trim(); touch(b); save('Обновил отзыв о книге «' + b.title + '»');
+      b.review = Rich.value($('#rText')); touch(b); save('Обновил отзыв о книге «' + b.title + '»');
       $('#review').innerHTML = reviewHTML(b, false);
       setupClamps($('#review'));
       const p = $('#review .review-text'); if (p) anim(p, [{ backgroundColor: 'rgba(200,35,30,.25)' }, { backgroundColor: 'rgba(200,35,30,0)' }], { duration: 900 });
@@ -598,18 +596,18 @@
     const b = byId(state.openId); if (!b) return;
     if (!canEdit()) return;
     if (e.target.id === 'qForm') {
-      const text = $('#qText').value.trim();
+      const text = Rich.value($('#qText'));
       if (!text) { showErr('#qErr', '#qText'); return; }
-      const q = { id: nid('q'), text, ref: $('#qRef').value.trim(), comment: $('#qCmt').value.trim() };
+      const q = { id: nid('q'), text, ref: $('#qRef').value.trim(), comment: Rich.value($('#qCmt')) };
       b.quotes = (b.quotes || []).concat(q); touch(b); save('Добавил цитату из «' + b.title + '»');
       const box = $('#quotes'); if (!box.querySelector('.quote')) box.innerHTML = '';
       box.insertAdjacentHTML('beforeend', quoteHTML(q));
       setupClamps(box.lastElementChild);
       anim(box.lastElementChild, [{ opacity: 0, transform: 'translateX(-40px)', backgroundColor: 'rgba(200,35,30,.35)' }, { opacity: 1, transform: 'none', backgroundColor: 'rgba(200,35,30,.18)', offset: 0.5 }, { backgroundColor: 'rgba(200,35,30,0)' }], { duration: 1200 });
-      e.target.reset(); closeForm('q'); refreshCounts(b); toast('Цитата сохранена');
+      e.target.reset(); $$('.ed-area', e.target).forEach(a => Rich.set(a, '')); closeForm('q'); refreshCounts(b); toast('Цитата сохранена');
     }
     if (e.target.id === 'tForm') {
-      const text = $('#tText').value.trim();
+      const text = Rich.value($('#tText'));
       if (!text) { showErr('#tErr', '#tText'); return; }
       const t = { id: nid('t'), text };
       b.thoughts = (b.thoughts || []).concat(t); touch(b); save('Записал мысль к книге «' + b.title + '»');
@@ -617,7 +615,7 @@
       box.insertAdjacentHTML('beforeend', thoughtHTML(t));
       setupClamps(box.lastElementChild);
       anim(box.lastElementChild, [{ opacity: 0, transform: 'translateX(-40px)', color: '#C8231E' }, { opacity: 1, transform: 'none', color: '#DEDAD0' }], { duration: 900 });
-      e.target.reset(); closeForm('t'); refreshCounts(b); toast('Мысль записана');
+      e.target.reset(); $$('.ed-area', e.target).forEach(a => Rich.set(a, '')); closeForm('t'); refreshCounts(b); toast('Мысль записана');
     }
   });
   function showErr(errSel, inpSel) {
@@ -710,7 +708,7 @@
         '<div class="f" id="pageBox"><label for="fPage">Сейчас на странице</label><input id="fPage" class="inp" type="number" inputmode="numeric"></div></div>' +
       '<div class="f pi"><span class="flabel">Оценка</span><div class="rate-l">' + ratingButtons(draft.rating, true) + '<span class="rate-num" style="font-size:28px"><span class="v" id="fRNum">' + (draft.rating ? fmtRate(draft.rating) : '—') + '</span><span class="of">/ 10</span></span></div></div>' +
       '<div class="f pi"><span class="flabel">Жанры</span><div class="gchips" id="fG"></div><div class="gedit"><label for="fGAdd" class="sr">Добавить жанр</label><select id="fGAdd" class="inp"></select></div><p class="gnote" id="fGNote"></p></div>' +
-      '<div class="f pi"><label for="fReview">Отзыв</label><textarea id="fReview" class="inp" rows="4" placeholder="Что думаешь о книге"></textarea></div>' +
+      '<div class="f pi"><label for="fReview">Отзыв</label>' + Rich.editor({ id: 'fReview', rows: 5, label: 'Отзыв', placeholder: 'Что думаешь о книге' }) + '</div>' +
       '<div class="pactions pi"><button type="submit" class="btn btn-red">' + (ed ? 'Сохранить' : 'Внести книгу') + '</button><button type="button" class="btn btn-ghost" data-act="close">Отмена</button></div>' +
     '</form>';
   }
@@ -737,7 +735,7 @@
     $('#fTitle').value = draft.title || ''; $('#fAuthor').value = draft.author || '';
     $('#fYear').value = draft.year || ''; $('#fPages').value = draft.pages || '';
     $('#fStart').value = draft.started || ''; $('#fFin').value = draft.finished || ''; $('#fPage').value = draft.page || '';
-    $('#fReview').value = draft.review || '';
+    Rich.set($('#fReview'), draft.review || '');
     $$('input[name="st"]', panel).forEach(r => { r.checked = r.value === draft.status; });
     syncStatus(false); renderPanelGenres();
     showPanel(b ? '#fTitle' : '#fFind');
@@ -905,7 +903,7 @@
     const num = id => { const v = parseInt($(id).value, 10); return isNaN(v) ? null : v; };
     Object.assign(draft, {
       title, author: $('#fAuthor').value.trim(), year: num('#fYear'), pages: num('#fPages'),
-      started: $('#fStart').value, review: $('#fReview').value.trim(), updatedAt: nowISO()
+      started: $('#fStart').value, review: Rich.value($('#fReview')), updatedAt: nowISO()
     });
     if (draft.status === 'read') { draft.finished = $('#fFin').value || todayISO(); if (draft.pages) draft.page = draft.pages; }
     else { draft.finished = ''; draft.page = num('#fPage') || 0; }
@@ -942,7 +940,7 @@
     if (!panelOpen) return;
     if (e.key === 'Escape') { e.preventDefault(); closePanel(); return; }
     if (e.key === 'Tab') {
-      const f = $$('button,input,select,textarea,a[href]', panel).filter(x => !x.disabled && x.offsetParent !== null && !(x.type === 'radio' && !x.checked));
+      const f = $$('button,input,select,textarea,a[href],[contenteditable="true"]', panel).filter(x => !x.disabled && x.offsetParent !== null && !(x.type === 'radio' && !x.checked));
       if (!f.length) return;
       const first = f[0], last = f[f.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
@@ -971,9 +969,9 @@
       const head = ['Название', 'Автор', 'Год издания', 'Страниц', 'Статус', 'Начал', 'Дочитал', 'Оценка из 10', 'Жанры', 'Отзыв', 'Цитаты', 'Мысли'];
       const rows = list.map(b => [
         b.title, b.author, b.year, b.pages, b.status === 'reading' ? 'Читаю' : 'Прочитано', b.started, b.finished, b.rating ? fmtRate(b.rating) : '',
-        (b.genres || []).join(', '), b.review,
-        (b.quotes || []).map(q => quoteWrap(q.text) + (q.ref ? ' (' + q.ref + ')' : '') + (q.comment ? ' — ' + q.comment : '')).join('\n'),
-        (b.thoughts || []).map(t => t.text).join('\n')
+        (b.genres || []).join(', '), Rich.plain(b.review),
+        (b.quotes || []).map(q => Rich.plain(quoteWrap(q.text)) + (q.ref ? ' (' + q.ref + ')' : '') + (q.comment ? ' — ' + Rich.plain(q.comment) : '')).join('\n'),
+        (b.thoughts || []).map(t => Rich.plain(t.text)).join('\n')
       ].map(cell).join(';'));
       download('prochitano-' + stamp + '.csv', '﻿' + [head.map(cell).join(';')].concat(rows).join('\r\n'), 'text/csv;charset=utf-8');
     } else if (kind === 'md') {
@@ -987,14 +985,14 @@
         if (meta.length) out.push(meta.join(', ') + '  ');
         const d = datesText(b); if (d) out.push(d + '  ');
         out.push('Оценка: ' + (b.rating ? fmtRate(b.rating) + ' из 10' : 'нет'), '');
-        if (b.review) out.push(b.review, '');
+        if (b.review) out.push(Rich.md(b.review).replace(/\n+/g, '\n\n'), '');
         if ((b.quotes || []).length) {
           out.push('### Цитаты', '');
-          b.quotes.forEach(q => { out.push('> ' + quoteWrap(q.text).replace(/\n/g, '\n> ') + (q.ref ? '  \n> — ' + q.ref : ''), ''); if (q.comment) out.push('Мой комментарий: ' + q.comment, ''); });
+          b.quotes.forEach(q => { out.push('> ' + Rich.md(quoteWrap(q.text)).replace(/\n/g, '\n> ') + (q.ref ? '  \n> — ' + q.ref : ''), ''); if (q.comment) out.push('Мой комментарий: ' + Rich.md(q.comment), ''); });
         }
         if ((b.thoughts || []).length) {
           out.push('### Мысли', '');
-          b.thoughts.forEach(t => out.push('- ' + t.text.replace(/\n/g, ' ')));
+          b.thoughts.forEach(t => out.push('- ' + Rich.md(t.text).replace(/\n+/g, ' ')));
           out.push('');
         }
       });
@@ -1049,7 +1047,7 @@
     if (state.view === 'list') renderAll();
     else if (state.view === 'book') {
       const b = byId(state.openId);
-      const editing = document.activeElement && bookEl.contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+      const editing = document.activeElement && bookEl.contains(document.activeElement) && (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.activeElement.isContentEditable);
       if (!b) backToList();
       else if (!editing) renderBook(b, false);
     }
