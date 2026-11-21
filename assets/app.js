@@ -3,6 +3,23 @@
   'use strict';
 
   const GENRES = Lookup.GENRES;
+  // Подсказки для поля жанра: встроенный список плюс жанры, которые уже есть у книг.
+  function genreOptions(exclude) {
+    const used = [];
+    books.forEach(b => (b.genres || []).forEach(g => { if (!GENRES.includes(g) && !used.includes(g)) used.push(g); }));
+    return GENRES.concat(used.sort((a, b) => a.localeCompare(b, 'ru'))).filter(g => !(exclude || []).includes(g));
+  }
+  function cleanGenre(raw, current) {
+    let g = String(raw || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!g) return '';
+    const known = genreOptions().find(x => x.toLowerCase() === g.toLowerCase());
+    g = known || (g[0].toUpperCase() + g.slice(1));
+    return (current || []).some(x => x.toLowerCase() === g.toLowerCase()) ? '' : g;
+  }
+  function genreInput(id, exclude) {
+    return '<label for="' + id + '" class="sr">Добавить жанр</label><input id="' + id + '" class="inp gin" list="' + id + 'List" placeholder="Добавить жанр: выбери или впиши свой" autocomplete="off" maxlength="40">' +
+      '<datalist id="' + id + 'List">' + genreOptions(exclude).map(g => '<option value="' + esc(g) + '"></option>').join('') + '</datalist>';
+  }
 
   /* ---------- помощники ---------- */
   const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -294,8 +311,7 @@
   function genresHTML(b, editing) {
     const chips = (b.genres || []).map(g => '<span class="gchip" data-g="' + esc(g) + '">' + esc(g) + (editing ? '<button type="button" data-act="grem" data-g="' + esc(g) + '" aria-label="Убрать жанр ' + esc(g) + '">' + X_SVG + '</button>' : '') + '</span>').join('');
     if (editing) {
-      const opts = GENRES.filter(g => !(b.genres || []).includes(g)).map(g => '<option>' + esc(g) + '</option>').join('');
-      return '<div class="gchips" id="bChips">' + chips + '</div><div class="gedit"><label for="gAdd" class="sr">Добавить жанр</label><select id="gAdd" class="inp"><option value="">Добавить жанр…</option>' + opts + '</select><button type="button" class="btn btn-ink btn-sm" data-act="gdone">Готово</button></div>';
+      return '<div class="gchips" id="bChips">' + chips + '</div><div class="gedit">' + genreInput('gAdd', b.genres) + '<button type="button" class="btn btn-red btn-sm" data-act="gadd">Добавить</button><button type="button" class="btn btn-ink btn-sm" data-act="gdone">Готово</button></div>';
     }
     const note = (b.genres || []).length ? (b.genresAuto ? 'Жанры определены автоматически.' : 'Жанры указаны вручную.') : 'Жанры не указаны.';
     return '<div class="gchips" id="bChips">' + chips + '</div><p class="gnote">' + note + ' <button type="button" class="link" data-act="gedit">' + ((b.genres || []).length ? 'Исправить' : 'Добавить') + '</button></p>';
@@ -531,7 +547,8 @@
       backToList(); setTimeout(() => toast('Книга удалена'), 700);
     }
     else if (act === 'gedit') { $('#gRow').innerHTML = genresHTML(b, true); anim($('.gedit'), [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 350 }); $('#gAdd').focus(); }
-    else if (act === 'gdone') { $('#gRow').innerHTML = genresHTML(b, false); }
+    else if (act === 'gdone') { const pend = $('#gAdd'); if (pend && pend.value.trim()) addBookGenre(b, pend.value); $('#gRow').innerHTML = genresHTML(b, false); }
+    else if (act === 'gadd') addBookGenre(b, $('#gAdd').value);
     else if (act === 'grem') {
       const g = t.dataset.g, chip = t.closest('.gchip');
       b.genres = b.genres.filter(x => x !== g); b.genresAuto = false; touch(b); save('Поправил жанры книги «' + b.title + '»');
@@ -570,17 +587,25 @@
       celebrate(b);
     }
   });
+  function addBookGenre(b, raw) {
+    if (!canEdit()) return;
+    const g = cleanGenre(raw, b.genres);
+    const inp = $('#gAdd');
+    if (!g) { if (inp) { inp.value = ''; inp.focus(); } return; }
+    b.genres = (b.genres || []).concat(g); b.genresAuto = false; touch(b); save('Поправил жанры книги «' + b.title + '»');
+    $('#gRow').innerHTML = genresHTML(b, true);
+    const chip = $('#bChips .gchip[data-g="' + CSS.escape(g) + '"]');
+    anim(chip, [{ opacity: 0, transform: 'scale(1.8) rotate(-10deg)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+    $('#gAdd').focus();
+  }
+  bookEl.addEventListener('keydown', e => {
+    if (e.target.id === 'gAdd' && e.key === 'Enter') { e.preventDefault(); const b = byId(state.openId); if (b) addBookGenre(b, e.target.value); }
+  });
   previewRating(bookEl);
   bookEl.addEventListener('change', e => {
     const b = byId(state.openId); if (!b) return;
-    if (e.target.id === 'gAdd' && e.target.value) {
-      if (!canEdit()) return;
-      const g = e.target.value; b.genres = (b.genres || []).concat(g); b.genresAuto = false; touch(b); save('Поправил жанры книги «' + b.title + '»');
-      $('#gRow').innerHTML = genresHTML(b, true);
-      const chip = $('#bChips .gchip[data-g="' + CSS.escape(g) + '"]');
-      anim(chip, [{ opacity: 0, transform: 'scale(1.8) rotate(-10deg)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.3,1.4,.5,1)' });
-      $('#gAdd').focus();
-    }
+    // Выбор из подсказок сразу добавляет жанр; свой жанр добавляется по Enter или кнопке.
+    if (e.target.id === 'gAdd' && genreOptions().includes(e.target.value)) addBookGenre(b, e.target.value);
     if (e.target.id === 'pPage') {
       if (!canEdit()) { e.target.value = b.page || 0; return; }
       let p = Math.max(0, Number(e.target.value) || 0); if (b.pages) p = Math.min(p, b.pages);
@@ -698,7 +723,7 @@
     return '<div class="panel-head"><h2 id="pTitle">' + (ed ? 'Изменить книгу' : 'Новая книга') + '</h2><button type="button" class="pclose" data-act="close" aria-label="Закрыть">' + X_SVG + '</button></div>' +
     '<form class="panel-body" id="bf" novalidate>' +
       (ed ? '' : '<div class="find pi"><label for="fFind" class="flabel">Найти книгу</label><div class="find-row"><input id="fFind" class="inp" placeholder="Название или автор" autocomplete="off"><button type="button" class="btn btn-ink" data-act="find" id="findBtn">Найти</button></div>' +
-        '<p class="hint">Ищу в Google Books и Open Library. Выбери издание, и название, автор, год, страницы и жанры заполнятся сами.</p><ul class="results" id="results"></ul></div>') +
+        '<p class="hint">Можно писать по-русски, с автором или без. Выбери книгу, и название, автор, год первой публикации, страницы и жанры заполнятся сами.</p><ul class="results" id="results"></ul></div>') +
       '<div class="f pi"><label for="fTitle">Название</label><input id="fTitle" class="inp" autocomplete="off"><span class="err is-hidden" id="eTitle">Впиши название книги</span></div>' +
       '<div class="f pi"><label for="fAuthor">Автор</label><input id="fAuthor" class="inp" autocomplete="off"></div>' +
       '<div class="grid2 pi"><div class="f"><label for="fYear">Год издания</label><input id="fYear" class="inp" type="number" inputmode="numeric"></div><div class="f"><label for="fPages">Страниц</label><input id="fPages" class="inp" type="number" inputmode="numeric"></div></div>' +
@@ -707,7 +732,7 @@
         '<div class="f" id="finBox"><label for="fFin">Дочитал</label><input id="fFin" class="inp" type="date"></div>' +
         '<div class="f" id="pageBox"><label for="fPage">Сейчас на странице</label><input id="fPage" class="inp" type="number" inputmode="numeric"></div></div>' +
       '<div class="f pi"><span class="flabel">Оценка</span><div class="rate-l">' + ratingButtons(draft.rating, true) + '<span class="rate-num" style="font-size:28px"><span class="v" id="fRNum">' + (draft.rating ? fmtRate(draft.rating) : '—') + '</span><span class="of">/ 10</span></span></div></div>' +
-      '<div class="f pi"><span class="flabel">Жанры</span><div class="gchips" id="fG"></div><div class="gedit"><label for="fGAdd" class="sr">Добавить жанр</label><select id="fGAdd" class="inp"></select></div><p class="gnote" id="fGNote"></p></div>' +
+      '<div class="f pi"><span class="flabel">Жанры</span><div class="gchips" id="fG"></div><div class="gedit" id="fGEdit"></div><p class="gnote" id="fGNote"></p></div>' +
       '<div class="f pi"><label for="fReview">Отзыв</label>' + Rich.editor({ id: 'fReview', rows: 5, label: 'Отзыв', placeholder: 'Что думаешь о книге' }) + '</div>' +
       '<div class="pactions pi"><button type="submit" class="btn btn-red">' + (ed ? 'Сохранить' : 'Внести книгу') + '</button><button type="button" class="btn btn-ghost" data-act="close">Отмена</button></div>' +
     '</form>';
@@ -715,7 +740,9 @@
   function renderPanelGenres(added) {
     const box = $('#fG'); if (!box) return;
     box.innerHTML = draft.genres.map(g => '<span class="gchip" data-g="' + esc(g) + '">' + esc(g) + '<button type="button" data-act="pgrem" data-g="' + esc(g) + '" aria-label="Убрать жанр ' + esc(g) + '">' + X_SVG + '</button></span>').join('');
-    $('#fGAdd').innerHTML = '<option value="">Добавить жанр…</option>' + GENRES.filter(g => !draft.genres.includes(g)).map(g => '<option>' + esc(g) + '</option>').join('');
+    const box2 = $('#fGEdit'), had = $('#fGAdd'), focused = had && document.activeElement === had;
+    box2.innerHTML = genreInput('fGAdd', draft.genres) + '<button type="button" class="btn btn-ink btn-sm" data-act="pgadd">Добавить</button>';
+    if (focused) $('#fGAdd').focus();
     $('#fGNote').textContent = draft.genres.length
       ? (draft.genresAuto ? 'Жанры определены автоматически. Если что-то не так, убери лишнее или добавь своё.' : '')
       : (editingId ? '' : 'Жанры подставятся сами, когда выберешь книгу из поиска.');
@@ -760,7 +787,7 @@
       if (token === fillToken) $('#fAuthor').focus();
     } else {
       ul.innerHTML = found.map((c, i) => '<li><button type="button" class="res" data-res="' + i + '"><span class="res-t">' + esc(c.title) + '</span><span class="res-m">' +
-        esc([c.author, c.firstYear || c.year, c.pages ? c.pages + ' с.' : ''].filter(Boolean).join(', ')) + '</span><span class="res-src">' + esc(c.source) + '</span></button></li>').join('');
+        esc([c.author, c.firstYear || c.year, c.pages ? c.pages + ' с.' : ''].filter(Boolean).join(', ')) + '</span>' + (c.description ? '<span class="res-d">' + esc(c.description.length > 110 ? c.description.slice(0, 110) + '…' : c.description) + '</span>' : '') + '<span class="res-src">' + esc(c.source) + '</span></button></li>').join('');
     }
     $$('li', ul).forEach((li, i) => anim(li, [{ opacity: 0, transform: 'translateY(-10px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: i * 60 }));
   }
@@ -781,12 +808,12 @@
     anim(ul, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: 220, fill: 'forwards' }).finished.then(() => {
       if (token === fillToken && ul.isConnected) { ul.innerHTML = ''; if (ul.getAnimations) ul.getAnimations().forEach(a => a.cancel()); }
     });
-    const details = Lookup.enrich(c).catch(() => ({ year: c.year, genres: [] }));
+    const details = Lookup.enrich(c).catch(() => ({ year: c.firstYear || c.year, pages: c.pages, genres: [] }));
     await typeInto($('#fTitle'), c.title, token); if (token !== fillToken) return;
     await typeInto($('#fAuthor'), c.author || '', token); if (token !== fillToken) return;
     const info = await details; if (token !== fillToken) return;
     if (info.year) await typeInto($('#fYear'), String(info.year), token); if (token !== fillToken) return;
-    if (c.pages) await typeInto($('#fPages'), String(c.pages), token); if (token !== fillToken) return;
+    if (info.pages) await typeInto($('#fPages'), String(info.pages), token); if (token !== fillToken) return;
     draft.genres = []; draft.genresAuto = true; renderPanelGenres();
     if (!info.genres.length) { $('#fGNote').textContent = 'Жанры определить не получилось, выбери их из списка.'; draft.genresAuto = false; return; }
     for (const g of info.genres) { if (token !== fillToken) return; draft.genres.push(g); renderPanelGenres(g); await wait(RM ? 0 : 200); }
@@ -813,6 +840,10 @@
       '<span class="err is-hidden pi" id="sErr"></span>' +
       '<div class="pactions pi"><button type="submit" class="btn btn-red" id="sGo">' + (on ? 'Подключить заново' : 'Подключить') + '</button>' +
         (on ? '<button type="button" class="btn btn-ghost" data-act="disconnect">Отключить это устройство</button>' : '') + '</div>' +
+      '<hr class="panel-sep pi">' +
+      '<h3 class="pi">Google Books</h3>' +
+      '<p class="lead pi">Необязательно. Поиск книг работает и без этого, через Wikidata и Open Library. Общий бесплатный лимит Google Books почти всегда исчерпан, но со своим ключом Google добавит русские издания, описания и точное число страниц. Ключ создаётся бесплатно в <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud</a>: включи Books API и создай API key.</p>' +
+      '<div class="f pi"><label for="sGKey">Ключ Google Books</label><div class="find-row"><input id="sGKey" class="inp" type="password" autocomplete="off" spellcheck="false" placeholder="' + (Lookup.googleKey() ? 'Ключ сохранён на этом устройстве' : 'AIza…') + '"><button type="button" class="btn btn-ink" data-act="gkey">Сохранить</button></div></div>' +
       '<hr class="panel-sep pi">' +
       '<h3 class="pi">Резервная копия</h3>' +
       '<p class="lead pi">Загрузи файл JSON, который раньше скачал через «Экспорт всех данных». Книги из файла добавятся к текущим, а совпадающие обновятся.</p>' +
@@ -877,6 +908,13 @@
     const act = t.dataset.act;
     if (act === 'close') closePanel();
     else if (act === 'find') doFind();
+    else if (act === 'pgadd') addDraftGenre($('#fGAdd').value);
+    else if (act === 'gkey') {
+      const v = $('#sGKey').value.trim();
+      Lookup.setGoogleKey(v);
+      $('#sGKey').value = ''; $('#sGKey').placeholder = v ? 'Ключ сохранён на этом устройстве' : 'AIza…';
+      toast(v ? 'Ключ Google Books сохранён' : 'Ключ Google Books удалён');
+    }
     else if (act === 'disconnect') { Store.disconnect(); closePanel(); toast('Устройство отключено'); if (state.view === 'book' && byId(state.openId)) renderBook(byId(state.openId), false); }
     else if (act === 'pgrem') {
       const g = t.dataset.g, chip = t.closest('.gchip');
@@ -887,10 +925,16 @@
   previewRating(panel);
   panel.addEventListener('change', e => {
     if (e.target.name === 'st') { draft.status = e.target.value; syncStatus(true); }
-    if (e.target.id === 'fGAdd' && e.target.value) { const g = e.target.value; draft.genres.push(g); draft.genresAuto = false; renderPanelGenres(g); $('#fGAdd').focus(); }
+    if (e.target.id === 'fGAdd' && genreOptions().includes(e.target.value)) addDraftGenre(e.target.value);
     if (e.target.id === 'sImport' && e.target.files && e.target.files[0]) importFile(e.target.files[0]);
   });
+  function addDraftGenre(raw) {
+    const g = cleanGenre(raw, draft.genres);
+    if (!g) { const i = $('#fGAdd'); if (i) i.value = ''; return; }
+    draft.genres.push(g); draft.genresAuto = false; renderPanelGenres(g); $('#fGAdd').focus();
+  }
   panel.addEventListener('keydown', e => {
+    if (e.target.id === 'fGAdd' && e.key === 'Enter') { e.preventDefault(); addDraftGenre(e.target.value); return; }
     if (e.target.id === 'fFind' && e.key === 'Enter') { e.preventDefault(); doFind(); }
   });
   panel.addEventListener('submit', e => {

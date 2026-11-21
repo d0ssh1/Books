@@ -378,3 +378,9 @@ textarea.inp{resize:vertical;min-height:90px}
   .hero-title{padding-bottom:62px}
   .tag{position:absolute;left:8px;bottom:4px;margin:0;white-space:nowrap;font-size:24px}
 }
+
+/* поле жанра и описание в результатах поиска */
+.gedit .gin{flex:1 1 240px;width:auto;min-width:0}
+.res-d{font-size:14px;line-height:1.35;color:var(--ink-2)}
+.res:hover .res-d,.res:focus-visible .res-d{color:#C9C4B8}
+.lead a{text-decoration-color:var(--red);text-decoration-thickness:2px;text-underline-offset:3px;font-weight:500}
