@@ -21,6 +21,7 @@ window.Lookup = (function () {
   const NONFICTION = new Set(['История', 'Философия', 'Психология', 'Научпоп', 'Бизнес', 'Саморазвитие',
     'Публицистика', 'Эссе', 'Биография и мемуары', 'Путешествия']);
 
+  const STRICT = new Set(['Комиксы и манга', 'Детская литература']);
   const RULES = [
     ['Классика', /\bclassics?\b|classic (fiction|literature)|классическ/],
     ['Психологическая проза', /psychological (fiction|novel)|confessional|психологическ\w* (роман|проз)|исповед/],
@@ -269,6 +270,8 @@ window.Lookup = (function () {
         if (r.years && r.years.length > 1 && best.firstYear) {
           r.firstYear = r.years.reduce((a, b) => Math.abs(b - best.firstYear) < Math.abs(a - best.firstYear) ? b : a);
         }
+        // Если Open Library знает чуть более ранний год, это обычно первая публикация (у «Преступления и наказания» 1866, а не 1886).
+        if (best.firstYear && r.firstYear && best.firstYear < r.firstYear && r.firstYear - best.firstYear <= 40) r.firstYear = best.firstYear;
       }).catch(() => {}));
     }
     if (r.source !== 'Wikidata') {
@@ -291,8 +294,15 @@ window.Lookup = (function () {
     const subj = norm((r.subjects || []).join(' | '));
     const desc = norm(r.description);
     const all = wd + ' | ' + cat + ' | ' + subj;
-    const nf = s => s.replace(/non-?fiction|нон-?фикшн/g, ' ');
-    const isFiction = /fiction|novel|роман|проза|повест|рассказ|stories/.test(nf(all)) || /\bроман\b|повесть/.test(desc);
+    // Художественная книга или нет: сравниваем признаки по каждому источнику, а не ищем одно слово.
+    const FIC = /fiction|novel|роман|проза|повест|рассказ|stories/;
+    const NONFIC = /non-?fiction|нон-?фикшн|history|histoire|historia|science|biograph|self-help|psycholog|business|philosoph|essays|научн|истори/;
+    const clean = x => norm(x).replace(/non-?fiction|graphic novels?|comics & graphic/g, m => m.startsWith('non') ? 'nonfic' : ' ');
+    let fic = 0, non = 0;
+    (r.subjects || []).forEach(x => { const c = clean(x); if (FIC.test(c)) fic++; if (/nonfic/.test(c) || NONFIC.test(c)) non++; });
+    [wd, cat].forEach(x => { const c = clean(x); if (FIC.test(c)) fic += 3; if (/nonfic/.test(c) || NONFIC.test(c)) non += 3; });
+    if (/\bроман\b|повесть/.test(desc)) fic += 2;
+    const isFiction = fic > non;
     const score = {};
     const add = (g, n) => { score[g] = (score[g] || 0) + n; };
     const noSF = s => s.replace(/science fiction|научн\w* фантаст\w*/g, ' ');
@@ -302,7 +312,8 @@ window.Lookup = (function () {
       if (hit(cat)) add(g, 2);
       if (NONFICTION.has(g) && isFiction) return;
       const n = (r.subjects || []).filter(x => hit(norm(x))).length;
-      if (n) add(g, 1.5 * Math.min(n, 2));
+      // Комиксы и детские книги по одним только темам не ставим: у известных книг часто есть комикс-адаптации.
+      if (n && !(STRICT.has(g) && n < 3)) add(g, 1.5 * Math.min(n, 2));
       if (FICTION.has(g) || !isFiction) { if (hit(desc)) add(g, 1); }
     });
     // Классика: старые книги и известные книги прошлого века (их статьи есть во многих Википедиях).
