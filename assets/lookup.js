@@ -267,8 +267,10 @@ window.Lookup = (function () {
         if (!best) return;
         absorb(r, best);
         // У некоторых книг в Wikidata несколько дат (у «Мастера и Маргариты» 1928 и 1967): берём ближайшую к Open Library.
+        // Если год из Open Library попадает между ними, берём ближайший, иначе самый ранний.
         if (r.years && r.years.length > 1 && best.firstYear) {
-          r.firstYear = r.years.reduce((a, b) => Math.abs(b - best.firstYear) < Math.abs(a - best.firstYear) ? b : a);
+          const lo = Math.min.apply(null, r.years), hi = Math.max.apply(null, r.years);
+          if (best.firstYear >= lo && best.firstYear <= hi) r.firstYear = r.years.reduce((a, b) => Math.abs(b - best.firstYear) < Math.abs(a - best.firstYear) ? b : a);
         }
         // Если Open Library знает чуть более ранний год, это обычно первая публикация (у «Преступления и наказания» 1866, а не 1886).
         if (best.firstYear && r.firstYear && best.firstYear < r.firstYear && r.firstYear - best.firstYear <= 40) r.firstYear = best.firstYear;
