@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-18T08:57:15.704Z",
+  "updated": "2026-11-21T03:21:32.178Z",
   "books": [
     {
       "status": "read",
@@ -263,21 +263,21 @@
       ]
     },
     {
-      "status": "reading",
+      "status": "read",
       "genres": [
         "Современная проза"
       ],
       "genresAuto": true,
       "rating": null,
       "started": "2026-11-17",
-      "finished": "",
-      "page": 30,
+      "finished": "2026-11-21",
+      "page": 192,
       "review": "",
       "title": "Вероника решает умереть",
       "author": "Пауло Коэльо",
       "year": 1998,
       "pages": 192,
-      "updatedAt": "2026-11-18T08:57:15.704Z",
+      "updatedAt": "2026-11-21T03:21:32.178Z",
       "id": "bmwlvxlsvy04x",
       "createdAt": "2026-11-18T08:54:30.559Z",
       "quotes": [],
