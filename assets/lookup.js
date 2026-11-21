@@ -110,12 +110,13 @@ window.Lookup = (function () {
           source: 'Wikidata', wd: id, ord: Number(v('ord')),
           title: v('ru') || v('en'), titleEn: v('en'),
           author: shortName(v('authorRu') || v('authorEn')), authorEn: v('authorEn'),
-          year: null, pages: Number(v('pages')) || null, links: Number(v('links')) || 0,
+          year: null, years: [], pages: Number(v('pages')) || null, links: Number(v('links')) || 0,
           wdGenres: new Set(), categories: [], subjects: [], description: v('desc')
         };
         map.set(id, o);
       }
       const y = okYear(parseInt(v('date').slice(0, 4), 10));
+      if (y && !o.years.includes(y)) o.years.push(y);
       if (y && (!o.year || y < o.year)) o.year = y;
       if (v('genreRu')) o.wdGenres.add(v('genreRu'));
       if (v('genreEn')) o.wdGenres.add(v('genreEn'));
@@ -217,6 +218,10 @@ window.Lookup = (function () {
       ks.forEach(k => index.set(k, r));
       out.push(r);
     });
+    if (/[а-яё]/i.test(q)) {
+      const cyr = r => /[а-яё]/i.test(r.title);
+      out.sort((a, b) => (cyr(b) ? 1 : 0) - (cyr(a) ? 1 : 0));
+    }
     const top = out.slice(0, 8);
     await Promise.all(top.map(async r => { r.author = (await Promise.all(r.author.split(', ').map(russianAuthor))).join(', '); }));
     return top;
@@ -226,7 +231,15 @@ window.Lookup = (function () {
   async function enrich(r) {
     const tasks = [];
     if (r.source === 'Wikidata' && (!r.pages || !r.subjects.length) && (r.titleEn || r.title)) {
-      tasks.push(openLibraryByTitle(r.titleEn || r.title, r.authorEn || r.author).then(list => list.forEach(x => absorb(r, x))).catch(() => {}));
+      tasks.push(openLibraryByTitle(r.titleEn || r.title, r.authorEn || r.author).then(list => {
+        const best = list[0];
+        if (!best) return;
+        absorb(r, best);
+        // У некоторых книг в Wikidata несколько дат (у «Мастера и Маргариты» 1928 и 1967): берём ближайшую к Open Library.
+        if (r.years && r.years.length > 1 && best.firstYear) {
+          r.firstYear = r.years.reduce((a, b) => Math.abs(b - best.firstYear) < Math.abs(a - best.firstYear) ? b : a);
+        }
+      }).catch(() => {}));
     }
     if (r.source !== 'Wikidata') {
       tasks.push(searchWikidata(r.title + ' ' + surname(r.author)).then(list => {
@@ -248,7 +261,8 @@ window.Lookup = (function () {
     const subj = norm((r.subjects || []).join(' | '));
     const desc = norm(r.description);
     const all = wd + ' | ' + cat + ' | ' + subj;
-    const isFiction = /fiction|novel|роман|проза|повест|рассказ|stories/.test(all) || /\bроман\b|повесть/.test(desc);
+    const nf = s => s.replace(/non-?fiction|нон-?фикшн/g, ' ');
+    const isFiction = /fiction|novel|роман|проза|повест|рассказ|stories/.test(nf(all)) || /\bроман\b|повесть/.test(desc);
     const score = {};
     const add = (g, n) => { score[g] = (score[g] || 0) + n; };
     const noSF = s => s.replace(/science fiction|научн\w* фантаст\w*/g, ' ');
@@ -257,7 +271,8 @@ window.Lookup = (function () {
       if (hit(wd)) add(g, 2);
       if (hit(cat)) add(g, 2);
       if (NONFICTION.has(g) && isFiction) return;
-      if (hit(subj)) add(g, 1.5);
+      const n = (r.subjects || []).filter(x => hit(norm(x))).length;
+      if (n) add(g, 1.5 * Math.min(n, 2));
       if (FICTION.has(g) || !isFiction) { if (hit(desc)) add(g, 1); }
     });
     // Классика: старые книги и известные книги прошлого века (их статьи есть во многих Википедиях).
