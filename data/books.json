@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-22T06:48:37.425Z",
+  "updated": "2026-11-25T02:28:59.415Z",
   "books": [
     {
       "status": "read",
@@ -300,13 +300,13 @@
       "rating": null,
       "started": "2026-11-20",
       "finished": "",
-      "page": 1577,
+      "page": 1948,
       "review": "",
       "title": "Лолита",
       "author": "Владимир Набоков",
       "year": 1967,
       "pages": 9499,
-      "updatedAt": "2026-11-22T06:48:37.424Z",
+      "updatedAt": "2026-11-25T02:28:59.414Z",
       "id": "bmwpujldp3n35",
       "createdAt": "2026-11-21T03:26:41.917Z",
       "quotes": [],
