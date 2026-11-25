@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-25T06:06:48.064Z",
+  "updated": "2026-11-25T06:54:08.100Z",
   "books": [
     {
       "status": "read",
@@ -297,7 +297,7 @@
         "Роман о любви"
       ],
       "genresAuto": false,
-      "rating": null,
+      "rating": 9,
       "started": "2026-11-20",
       "finished": "",
       "page": 2195,
@@ -306,7 +306,7 @@
       "author": "Владимир Набоков",
       "year": 1967,
       "pages": 9499,
-      "updatedAt": "2026-11-25T06:06:48.064Z",
+      "updatedAt": "2026-11-25T06:54:08.100Z",
       "id": "bmwpujldp3n35",
       "createdAt": "2026-11-21T03:26:41.917Z",
       "quotes": [],
